@@ -4,7 +4,10 @@ const { protect } = require('../middleware/authMiddleware');
 
 const router = express.Router();
 
-router.get('/projects', protect, getProjectStatusReport); // Защищенный маршрут для получения отчета о статусе проектов
-router.get('/tasks', protect, getTaskCompletionReport); // Защищенный маршрут для получения отчета о завершении задач
+// Захищений маршрут для отримання звіту про статус проектів / Protected route to get the project status report
+router.get('/projects', protect, getProjectStatusReport);
 
-module.exports = router;
+// Захищений маршрут для отримання звіту про завершення задач / Protected route to get the task completion report
+router.get('/tasks', protect, getTaskCompletionReport);
+
+module.exports = router; // Експортуємо роутер / Export the router

@@ -1,10 +1,13 @@
-const express = require('express');
-const { getNotifications, markAsRead } = require('../controllers/notificationController');
-const { protect } = require('../middleware/authMiddleware'); // Middleware для защиты маршрутов
+const express = require('express'); // Імпортуємо express / Import express
+const { getNotifications, markAsRead } = require('../controllers/notificationController'); // Імпортуємо контролери для обробки сповіщень / Import controllers for handling notifications
+const { protect } = require('../middleware/authMiddleware'); // Middleware для захисту маршрутів / Middleware to protect routes
 
-const router = express.Router();
+const router = express.Router(); // Створюємо роутер / Create the router
 
-router.get('/', protect, getNotifications); // Получение уведомлений пользователя
-router.put('/:id/read', protect, markAsRead); // Пометка уведомления как прочитанного
+// Маршрут для отримання сповіщень користувача / Route to get user notifications
+router.get('/', protect, getNotifications);
 
-module.exports = router;
+// Маршрут для позначення сповіщення як прочитаного / Route to mark a notification as read
+router.put('/:id/read', protect, markAsRead);
+
+module.exports = router; // Експортуємо роутер / Export the router

@@ -1,12 +1,14 @@
 const asyncHandler = require('express-async-handler');
 const Task = require('../models/Task');
-const Activity = require('../models/Activity'); // Импортируем модель Activity
+const Activity = require('../models/Activity'); // Import Activity model / Імпортуємо модель Activity
 const Notification = require('../models/Notification');
-// Получение всех задач / Get all tasks
-const getTasks = asyncHandler(async (req, res) => {
-    const tasks = await Task.find().populate('project', 'title'); // Получаем задачи с информацией о проекте / Get tasks with project information
 
-    // Записываем активность после получения всех задач / Record activity after fetching all tasks
+// Get all tasks / Отримання всіх задач
+const getTasks = asyncHandler(async (req, res) => {
+    // Fetch tasks with project information / Отримуємо задачі з інформацією про проект
+    const tasks = await Task.find().populate('project', 'title');
+
+    // Record activity after fetching all tasks / Записуємо активність після отримання всіх задач
     await Activity.create({
         user: req.user._id,
         action: 'retrieved all tasks',
@@ -16,13 +18,15 @@ const getTasks = asyncHandler(async (req, res) => {
     res.json(tasks);
 });
 
-// Создание новой задачи / Create a new task
+// Create a new task / Створення нової задачі
 const createTask = asyncHandler(async (req, res) => {
     const { title, description, project } = req.body;
+
+    // Create a new task instance / Створюємо новий екземпляр задачі
     const task = new Task({ title, description, project });
     const createdTask = await task.save();
 
-    // Записываем активность после создания задачи / Record activity after creating a task
+    // Record activity after creating a task / Записуємо активність після створення задачі
     await Activity.create({
         user: req.user._id,
         action: 'created a task',
@@ -32,15 +36,16 @@ const createTask = asyncHandler(async (req, res) => {
     res.status(201).json(createdTask);
 });
 
-
-// Обновление задачи
+// Update a task / Оновлення задачі
 const updateTask = asyncHandler(async (req, res) => {
     const taskId = req.params.id;
     const { title, description, project, status, startDate, endDate, timeSpent, assignedTo } = req.body;
 
+    // Find task by ID / Знаходимо задачу за ID
     const task = await Task.findById(taskId);
 
     if (task) {
+        // Update task properties / Оновлюємо властивості задачі
         task.title = title || task.title;
         task.description = description || task.description;
         task.project = project || task.project;
@@ -50,10 +55,10 @@ const updateTask = asyncHandler(async (req, res) => {
         task.timeSpent = timeSpent || task.timeSpent;
         task.assignedTo = assignedTo || task.assignedTo;
 
-        // Сохранение обновленной задачи
+        // Save the updated task / Зберігаємо оновлену задачу
         const updatedTask = await task.save();
 
-        // Записываем активность после обновления задачи / Record activity after updating a task
+        // Record activity after updating a task / Записуємо активність після оновлення задачі
         await Activity.create({
             user: req.user._id,
             action: 'updated a task',
@@ -63,17 +68,19 @@ const updateTask = asyncHandler(async (req, res) => {
         res.json(updatedTask);
     } else {
         res.status(404);
-        throw new Error('Task not found');
+        throw new Error('Task not found'); // Задача не знайдена
     }
 });
 
-// Получение задачи по ID / Get task by ID
+// Get task by ID / Отримання задачі за ID
 const getTaskById = asyncHandler(async (req, res) => {
     const taskId = req.params.id;
+
+    // Find task by ID and populate project information / Знаходимо задачу за ID та отримуємо інформацію про проект
     const task = await Task.findById(taskId).populate('project', 'title');
 
     if (task) {
-        // Записываем активность после получения задачи по ID / Record activity after fetching the task by ID
+        // Record activity after fetching the task by ID / Записуємо активність після отримання задачі за ID
         await Activity.create({
             user: req.user._id,
             action: 'retrieved a task by ID',
@@ -83,27 +90,27 @@ const getTaskById = asyncHandler(async (req, res) => {
         res.json(task);
     } else {
         res.status(404);
-        throw new Error('Task not found');
+        throw new Error('Task not found'); // Задача не знайдена
     }
 });
 
-
-// Получение задач по статусу / Get tasks by status
+// Get tasks by status / Отримання задач за статусом
 const getTasksByStatus = async (req, res) => {
     const { status } = req.params;
     try {
         let tasks;
-        let statusLabel = status.charAt(0).toUpperCase() + status.slice(1).toLowerCase(); // По умолчанию форматируем статус
+        // By default, format status / За замовчуванням форматуємо статус
+        let statusLabel = status.charAt(0).toUpperCase() + status.slice(1).toLowerCase();
 
         if (status.toLowerCase() === 'all') {
             tasks = await Task.find().populate('project');
-            statusLabel = 'All'; // Используем "All" как статус
+            statusLabel = 'All'; // Use "All" as the status / Використовуємо "All" як статус
         } else {
             const formattedStatus = status.charAt(0).toUpperCase() + status.slice(1).toLowerCase();
             tasks = await Task.find({ status: formattedStatus }).populate('project');
         }
 
-        // Записываем активность после получения задач по статусу / Record activity after fetching tasks by status
+        // Record activity after fetching tasks by status / Записуємо активність після отримання задач за статусом
         await Activity.create({
             user: req.user._id,
             action: 'retrieved tasks by status',
@@ -112,24 +119,23 @@ const getTasksByStatus = async (req, res) => {
 
         res.json(tasks);
     } catch (error) {
-        console.error('Error fetching tasks by status:', error); // Логирование ошибки для отладки
+        console.error('Error fetching tasks by status:', error); // Log error for debugging / Логування помилки для відладки
         res.status(500).json({
             message: 'Error fetching tasks by status',
-            error: error.message || 'Unknown error', // Добавление сообщения ошибки
+            error: error.message || 'Unknown error', // Add error message / Додавання повідомлення про помилку
         });
     }
 };
 
-
-
-// Удаление задачи / Delete a task
+// Delete a task / Видалення задачі
 const deleteTask = asyncHandler(async (req, res) => {
+    // Find task by ID / Знаходимо задачу за ID
     const task = await Task.findById(req.params.id);
 
     if (task) {
         await task.remove();
 
-        // Записываем активность после удаления задачи / Record activity after deleting a task
+        // Record activity after deleting a task / Записуємо активність після видалення задачі
         await Activity.create({
             user: req.user._id,
             action: 'deleted a task',
@@ -139,7 +145,7 @@ const deleteTask = asyncHandler(async (req, res) => {
         res.json({ message: 'Task removed' });
     } else {
         res.status(404);
-        throw new Error('Task not found');
+        throw new Error('Task not found'); // Задача не знайдена
     }
 });
 

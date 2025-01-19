@@ -1,12 +1,12 @@
-const express = require('express');
-const router = express.Router();
-const { protect } = require('../middleware/authMiddleware');
-const { getActivities, getUserActivity } = require('../controllers/activityController');
+const express = require('express'); // Імпортуємо express / Import express
+const router = express.Router(); // Створюємо роутер / Create the router
+const { protect } = require('../middleware/authMiddleware'); // Імпортуємо middleware для захисту маршрутів / Import middleware to protect routes
+const { getActivities, getUserActivity } = require('../controllers/activityController'); // Імпортуємо контролери для активностей / Import controllers for activities
 
-// Маршрут для получения всех активностей
+// Маршрут для отримання всіх активностей / Route to get all activities
 router.get('/', protect, getActivities);
 
-// Маршрут для получения активности конкретного пользователя
+// Маршрут для отримання активності конкретного користувача / Route to get a specific user's activity
 router.get('/myactivity', protect, getUserActivity);
 
-module.exports = router;
+module.exports = router; // Експортуємо роутер / Export the router

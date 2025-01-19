@@ -1,11 +1,11 @@
-const express = require('express');
-const { registerUser, authUser } = require('../controllers/authController'); // Импорт контроллеров / Import controllers
+const express = require('express'); // Імпортуємо express / Import express
+const { registerUser, authUser } = require('../controllers/authController'); // Імпортуємо контролери для реєстрації та авторизації користувача / Import controllers for user registration and authentication
 
-const router = express.Router();
+const router = express.Router(); // Створюємо роутер / Create the router
 
-// Маршрут для регистрации пользователя / Route for user registration
+// Маршрут для реєстрації користувача / Route for user registration
 router.post('/register', registerUser);
-// Маршрут для входа пользователя / Route for user login
+// Маршрут для входу користувача / Route for user login
 router.post('/login', authUser);
 
-module.exports = router;
+module.exports = router; // Експортуємо роутер / Export the router

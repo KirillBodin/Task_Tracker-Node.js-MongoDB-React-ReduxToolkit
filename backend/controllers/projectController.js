@@ -2,22 +2,31 @@ const asyncHandler = require('express-async-handler');
 const Project = require('../models/Project');
 const User = require('../models/User');
 const Task = require('../models/Task');
-const Activity = require('../models/Activity'); // Импортируем модель Activity
+const Activity = require('../models/Activity'); // Import Activity model / Імпортуємо модель Activity
 const Notification = require('../models/Notification');
-// Получение списка проектов / Get all projects
+
+// Get all projects / Отримання списку проектів
 const getProjects = asyncHandler(async (req, res) => {
-    const projects = await Project.find().populate('developer', 'username'); // Получаем проекты с информацией о разработчиках / Get projects with developer information
+    // Fetch projects with developer information / Отримуємо проекти з інформацією про розробників
+    const projects = await Project.find().populate('developer', 'username');
     res.json(projects);
 });
 
-// Создание нового проекта / Create a new project
+// Create a new project / Створення нового проекту
 const createProject = asyncHandler(async (req, res) => {
     const { title, description, startDate, endDate } = req.body;
-    const project = new Project({ title, description,startDate: new Date(startDate), // Преобразуем строки в дату
-        endDate: new Date(endDate) });
+
+    // Create a new project instance, converting strings to dates / Створюємо новий екземпляр проекту, перетворюючи рядки в дати
+    const project = new Project({
+        title,
+        description,
+        startDate: new Date(startDate),
+        endDate: new Date(endDate)
+    });
+
     const createdProject = await project.save();
 
-    // Записываем активность после создания проекта / Record activity after creating the project
+    // Record activity after creating the project / Записуємо активність після створення проекту
     await Activity.create({
         user: req.user._id,
         action: 'created a project',
@@ -26,47 +35,58 @@ const createProject = asyncHandler(async (req, res) => {
 
     res.status(201).json(createdProject);
 });
-// Получение задач конкретного проекта
+
+// Get tasks for a specific project / Отримання задач конкретного проекту
 const getProjectTasks = async (req, res) => {
     try {
-        console.log("Received params:", req.params); // Логирование входных данных
-        const tasks = await Task.find({ project: req.params.projectId }); // Запрос на получение задач по projectId
-        console.log("Fetched tasks:", tasks); // Логирование найденных задач
-        res.json(tasks); // Возвращаем найденные задачи
+        console.log("Received params:", req.params); // Log input data / Логування вхідних даних
+
+        // Fetch tasks by projectId / Запит на отримання задач по projectId
+        const tasks = await Task.find({ project: req.params.projectId });
+        console.log("Fetched tasks:", tasks); // Log fetched tasks / Логування знайдених задач
+
+        res.json(tasks); // Return fetched tasks / Повертаємо знайдені задачі
     } catch (error) {
-        console.error("Error fetching project tasks:", error); // Логирование ошибки
+        console.error("Error fetching project tasks:", error); // Log error / Логування помилки
         res.status(500).json({ message: 'Error fetching project tasks' });
     }
 };
 
-// Обновление проекта / Update a project
+// Update a project / Оновлення проекту
 const updateProject = asyncHandler(async (req, res) => {
-    const { title, description, developerId } = req.body;
+    const { title, description, developerId, status } = req.body;
+
+    // Find project by ID / Знаходимо проект за ID
     const project = await Project.findById(req.params.id);
 
     if (project) {
+        // Update project properties / Оновлюємо властивості проекту
         project.title = title || project.title;
         project.description = description || project.description;
         const previousStatus = project.status;
         project.status = status || project.status;
+
         if (developerId) {
+            // Find developer by ID / Знаходимо розробника за ID
             const developer = await User.findById(developerId);
             if (developer) {
-                project.developer = developer._id; // Назначаем разработчика / Assign developer
+                project.developer = developer._id; // Assign developer / Призначаємо розробника
             }
         }
+
         const updatedProject = await project.save();
 
-        // Записываем активность после обновления проекта / Record activity after updating the project
+        // Record activity after updating the project / Записуємо активність після оновлення проекту
         await Activity.create({
             user: req.user._id,
             action: 'updated a project',
             details: `Project: ${updatedProject.title}`
         });
-        // Отправка уведомления, если проект был завершен / Send notification if the project was completed
+
+        // Send notification if the project was completed / Відправляємо повідомлення, якщо проект був завершений
         if (previousStatus !== 'Done' && project.status === 'Done') {
             await Notification.create({
-                user: project.owner, // Допустим, у проекта есть поле owner для ответственного пользователя
+                user: project.owner, // Assume the project has an owner field for the responsible user / Припустимо, що у проекту є поле owner для відповідального користувача
                 message: `Project "${project.title}" has been completed.`,
             });
         }
@@ -74,18 +94,19 @@ const updateProject = asyncHandler(async (req, res) => {
         res.json(updatedProject);
     } else {
         res.status(404);
-        throw new Error('Project not found');
+        throw new Error('Project not found'); // Проект не знайдено
     }
 });
 
-// Удаление проекта / Delete a project
+// Delete a project / Видалення проекту
 const deleteProject = asyncHandler(async (req, res) => {
+    // Find project by ID / Знаходимо проект за ID
     const project = await Project.findById(req.params.id);
 
     if (project) {
         await project.remove();
 
-        // Записываем активность после удаления проекта / Record activity after deleting the project
+        // Record activity after deleting the project / Записуємо активність після видалення проекту
         await Activity.create({
             user: req.user._id,
             action: 'deleted a project',
@@ -95,8 +116,8 @@ const deleteProject = asyncHandler(async (req, res) => {
         res.json({ message: 'Project removed' });
     } else {
         res.status(404);
-        throw new Error('Project not found');
+        throw new Error('Project not found'); // Проект не знайдено
     }
 });
 
-module.exports = { getProjects, createProject, updateProject, deleteProject,getProjectTasks };
+module.exports = { getProjects, createProject, updateProject, deleteProject, getProjectTasks };
