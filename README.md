@@ -1,4 +1,4 @@
-![изображение](https://github.com/user-attachments/assets/fbaf3b03-c92e-48c2-bd42-b3e050cb03d4)![изображение](https://github.com/user-attachments/assets/26dc860f-3153-423b-9eb0-a9259ab0eddb)# Task_Tracker-Node.js-MongoDB-React-Redux
+# Task_Tracker-Node.js-MongoDB-React-Redux
 
 ## Overview
 
